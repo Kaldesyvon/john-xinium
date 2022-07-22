@@ -72,12 +72,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>F:\Tvorba\openCL\Libraries\include;$(IncludePath)</IncludePath>
-    <LibraryPath>F:\Tvorba\openCL\Libraries\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>F:\Tvorba\john-xinium\Libraries\include;$(IncludePath)</IncludePath>
+    <LibraryPath>F:\Tvorba\john-xinium\Libraries\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>F:\Tvorba\openCL\Libraries\include;$(IncludePath)</IncludePath>
-    <LibraryPath>F:\Tvorba\openCL\Libraries\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>F:\Tvorba\john-xinium\Libraries\include;$(IncludePath)</IncludePath>
+    <LibraryPath>F:\Tvorba\john-xinium\Libraries\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

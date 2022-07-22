@@ -42,34 +42,6 @@ int main() {
 		3,0,4
 	};
 
-	GLfloat lightVertices[] =
-	{
-		-0.1f, -0.1f,   0.1f,
-		-0.1f, -0.1f,  -0.1f,
-		 0.1f, -0.1f,  -0.1f,
-		 0.1f, -0.1f,   0.1f,
-		-0.1f,  0.1f,   0.1f,
-		-0.1f,  0.1f,  -0.1f,
-		 0.1f,  0.1f,  -0.1f,
-		 0.1f,  0.1f,   0.1f,
-	};
-
-	GLuint lightIndices[] =
-	{
-		0,1,2,
-		0,2,3,
-		0,4,7,
-		0,7,3,
-		3,7,6,
-		3,6,2,
-		2,6,5,
-		2,5,1,
-		1,5,4,
-		1,4,0,
-		4,5,6,
-		4,6,7
-	};
-
 	GLFWwindow* window = glfwCreateWindow(_width, _height, "window", NULL, NULL);
 
 	if (window == NULL)
@@ -100,48 +72,17 @@ int main() {
 	VBO1.Unbind();
 	EBO1.Unbind();
 
-	Shader lightShader("light.vert", "light.frag");
-
-	VAO lightVAO;
-	lightVAO.Bind();
-
-	VBO lightVBO(lightVertices, sizeof(lightVertices));
-	EBO lightEBO(lightIndices, sizeof(lightIndices));
-
-	lightVAO.LinkAttrib(lightVBO, 0, 3, GL_FLOAT, 3 * sizeof(float), (void*)0);
-
-	lightVAO.Unbind();
-	lightVBO.Unbind();
-	lightEBO.Unbind();
-
-	glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
-	glm::mat4 lightModel = glm::mat4(1.0f);
-	lightModel = glm::translate(lightModel, lightPos);
-
-	glm::vec3 pyramidPos = glm::vec3(0.0f, 0.0f, 0.0f);
-	glm::mat4 pyramidModel = glm::mat4(1.0f);
-	pyramidModel = glm::translate(pyramidModel, pyramidPos);
-
-	lightShader.Activate();
-	glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
-	shaderProgram.Activate();
-	glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(pyramidModel));
-
-	
+	GLuint uniID = glGetUniformLocation(shaderProgram.ID, "scale");
 	
 	Texture brick("front.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
 	brick.texUnit(shaderProgram, "tex0", 0);
 
-	GLuint tex0Uni = glGetUniformLocation(shaderProgram.ID, "tex0");
-	shaderProgram.Activate();
-	glUniform1i(tex0Uni, 0);
 
-	//float rotation = 0.0f;
-	//double prevTime = glfwGetTime();
+	float rotation = 0.0f;
+	double prevTime = glfwGetTime();
 
 	glEnable(GL_DEPTH_TEST);
 
-	Camera camera(_width, _height, glm::vec3(0.0f, 0.0f, 2.0f));
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -149,26 +90,37 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		shaderProgram.Activate();
 
-		/*double crntTime = glfwGetTime();
-		if (crntTime - prevTime >= 1.0f / 60.0f)
+		double crntTime = glfwGetTime();
+		if (crntTime - prevTime >= 1 / 60)
 		{
 			rotation += 0.5f;
 			prevTime = crntTime;
-		}*/
+		}
 
-		camera.Inputs(window);
-		camera.updateMatrix(45.0f, 0.1f, 100.f);
-		shaderProgram.Activate();
-		camera.Matrix(shaderProgram, "camMatrix");
+		// Initializes matrices so they are not the null matrix
+		glm::mat4 model = glm::mat4(1.0f);
+		glm::mat4 view = glm::mat4(1.0f);
+		glm::mat4 proj = glm::mat4(1.0f);
+
+		model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f));
+		view = glm::translate(view, glm::vec3(0.0f, -0.5f, -2.0f));
+		proj = glm::perspective(glm::radians(45.0f), (float)_width / _height, 0.1f, 100.0f);
+
+		int modelLoc = glGetUniformLocation(shaderProgram.ID, "model");
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		int viewLoc = glGetUniformLocation(shaderProgram.ID, "view");
+		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+		int projLoc = glGetUniformLocation(shaderProgram.ID, "proj");
+		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+
+		// Assigns a value to the uniform; NOTE: Must always be done after activating the Shader Program
+		glUniform1f(uniID, 0.5f);
 		
 		brick.Bind();
 		VAO1.Bind();
 		glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(int), GL_UNSIGNED_INT, 0);
 
-		lightShader.Activate();
-		camera.Matrix(lightShader, "camMatrix");
-		lightVAO.Bind();
-		glDrawElements(GL_TRIANGLES, sizeof(lightIndices) / sizeof(int), GL_UNSIGNED_INT, 0);
+	
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -178,9 +130,7 @@ int main() {
 	VAO1.Delete();
 	VBO1.Delete();
 	EBO1.Delete();
-	lightVAO.Delete();
-	lightVBO.Delete();
-	lightEBO.Delete();
+
 
 	shaderProgram.Delete();
 	brick.Delete();
